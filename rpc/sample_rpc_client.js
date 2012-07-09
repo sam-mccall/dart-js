@@ -1,12 +1,23 @@
 window.addEventListener('load', function() {
+  test('js-calculator');
+  test('dart-calculator');
+});
 
-var calc = new rpc.Client('calculator').connect();
-//assertEquals(20, calc.multiply(4, calc.add(2, 3)));
-assertEquals(20, calc.method('multiply')(4, calc.method('add')(2, 3)));
-console.log('success!');
+function test(name) {
+  console.group(name);
+  try {
+    var calc = new rpc.Client(name).connect();
+    assertEquals(20, calc.multiply(4, calc.add(2, 3)));
+    console.log('success!');    
+  } catch (e) {
+    console.error(e);
+  } finally {
+    console.groupEnd(name);
+  }
+}
 
 function assertEquals(a, b) {
   if (a != b) throw new Error("Expected " + a + ", but got " + b);
 }
 
-});
+
