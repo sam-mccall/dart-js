@@ -8,9 +8,10 @@ function test(name) {
   try {
     var calc = new rpc.Client(name).connect();
     assertEquals(20, calc.multiply(4, calc.add(2, 3)));
-    console.log('success!');    
+    calc.generate_pi(function(x) { console.log(x); });
+    console.log('success!');
   } catch (e) {
-    console.error(e);
+    console.error(e, e.stack);
   } finally {
     console.groupEnd(name);
   }
