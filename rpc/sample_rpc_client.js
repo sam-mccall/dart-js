@@ -9,6 +9,10 @@ function test(name) {
     var calc = new rpc.Client(name).connect();
     assertEquals(20, calc.multiply(4, calc.add(2, 3)));
     calc.generate_pi(function(x) { console.log(x); });
+    calc.generate_e().onItem(function(digit) { console.log(digit); });
+    calc.open_the_pod_bay_doors_hal().onComplete(function(result, err) {
+      if (err != null) console.error(err.message); else console.log("Result", result);
+    });
     console.log('success!');
   } catch (e) {
     console.error(e, e.stack);
