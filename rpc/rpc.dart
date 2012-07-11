@@ -1,6 +1,6 @@
 
 #import("dart:json");
-#import("dart:isolate");
+//#import("dart:isolate", prefix: "isolate");
 #import("dart:html");
 
 
@@ -29,29 +29,77 @@ class HandleTable {
   }
 }
 
+class RemoteObject {
+  String handleType;
+  String id;
+  String home;
+  SendPortSync port;
+  RPC rpc;
+  
+  RemoteObject(this.handleType, this.id, this.home, this.port, this.rpc) {
+  }
+  
+  factory RemoteObject.fromJSON(Map json, RPC rpc) {
+    assert(json["\$type"] == "handle");
+    var handleType = json["handleType"];
+    assert(handleType != null);
+    var port = json["port"];
+    if (handleType == 'function') {
+      return new RemoteFunction(json["id"], json["home"], port, rpc);
+    } else {
+      throw "unsupported remote object type '$handleType'";
+    }
+  }
+
+  Map serialize() {
+    var serializedFunc = { "\$type": "handle",
+             "handleType": handleType,
+             "id": id,
+             "port": port,
+             "home": home };
+    return serializedFunc;
+  }
+}
+
+class RemoteFunction extends RemoteObject {
+  RemoteFunction(String id, String home, SendPortSync port, RPC rpc)
+    : super('function', id, home, port, rpc) {
+  }
+  
+  String toString() =>
+    "'RemoteFunction: {handleType: '$handleType', id: '$id'"
+    ", home: '$home', port: '$port'}'";
+  
+  invoke(List args) {
+    assert(port != null);
+    assert(port is SendPortSync);
+    return rpc.send(port, "__call__", [this, args]);
+  }
+}
+
 
 class RPC {
   String _portName;
   String _homeId;
   ReceivePortSync _recvPort;
-  HandleTable _handles;
   Map<String, Function> _methods;
-  
+  HandleTable _handles;
+    
   RPC.Server(String portName, Map methods) {
+    _handles = new HandleTable();
     _portName = portName;
     _homeId = makeHomeId();
     _recvPort = new ReceivePortSync();
     _recvPort.receive(receiveCallback);
     window.registerPort(portName, _recvPort.toSendPort());
     _methods = methods;
-    _handles = new HandleTable();
   }
   
   RPC.Client(String portName) {
+    _handles = new HandleTable();
     _portName = portName;
     _homeId = makeHomeId();
     _methods = null;
-    _handles = new HandleTable();
     _recvPort = new ReceivePortSync();
     _recvPort.receive(receiveCallback);
     // Debugging stuff. Check whether the server responds to the __index__
@@ -59,7 +107,7 @@ class RPC {
     var port = window.lookupPort(portName);
     assert(port != null);
     var res = port.callSync({"method":"__index__", "args":[]});
-    print(res);
+    debug(res);
   }
 
   String makeHomeId() => (Math.random() * 1000000).toInt().toString();
@@ -70,7 +118,9 @@ class RPC {
   }
 
   serialize(obj) {
-    if (obj is Function) {
+    if (obj is RemoteObject) {
+      return obj.serialize();
+    } else if (obj is Function) {
       var handleId = _handles.registerObject(obj);
       return { 
         "\$type": "handle",
@@ -100,6 +150,8 @@ class RPC {
       if (obj["home"] == _homeId) {
         assert(obj["id"] != null);
         obj = _handles.getObject(obj["id"]);
+      } else {
+        obj = new RemoteObject.fromJSON(obj, this);
       }
     }
     return obj;
@@ -115,28 +167,21 @@ class RPC {
     }
   }
 
-  invokeRpcCallback(Map callback, List args) {
-    var port = callback["port"];
-    assert(port != null);
-    assert(port is SendPortSync);
-    return send(port, "__call__", [callback, args]);
-  }
-
   receiveCallback(String msg) {
-    print("receiveCallback: $msg");
+    debug("receiveCallback: $msg");
     String methodName = msg["method"];
     assert(methodName != null);
     List serializedArgs = msg["args"];
     assert(serializedArgs != null);
     List args = deserialize(serializedArgs);
-    //print("receiveCallback: deserialized args: $args");
+    //debug("receiveCallback: deserialized args: $args");
     assert(args != null);
     if (methodName == "__index__") {
       return {"value": _methods.getKeys()};
     } else if (methodName == "__release__") {
       var id = args[0];
       var obj = _handles.getObject(id);
-      //print("request to release handle '$id' ($obj)");
+      //debug("request to release handle '$id' ($obj)");
       assert(id is String);
       assert(obj != null);
       _handles.releaseObject(id);
@@ -147,7 +192,7 @@ class RPC {
       assert(args.length == 2);
       m = args[0];     // First argument to rpc call is closure.
       args = args[1];  // Arguments to closure.
-      //print("request to call $m");
+      //debug("request to call $m");
     } else {
       m = _methods[methodName];
       if (m == null) {
@@ -165,16 +210,16 @@ class RPC {
   }
   
   send(SendPortSync port, String methodName, List args) {
-    print("args before serialize: $args");
+    debug("args before serialize: $args");
     var serializedArgs = serialize(args);
     var msg = {"method": methodName, "args": serializedArgs };
-    print("sending: $msg");
+    debug("sending: $msg");
     var res = port.callSync(msg);
-    print("received: $res");
+    debug("received: $res");
     if (res.containsKey("value")) {
       return deserialize(res["value"]);
     } else if (res["exception"] != null) {
-      print("received exception: ${res["exception"]}");
+      debug("received exception: ${res["exception"]}");
       throw res["exception"];
     } else {
       throw "Illegal rpc response format.";
@@ -182,21 +227,24 @@ class RPC {
   }
   
   noSuchMethod(String methodName, List args) {
-    print(">>> noSuchMethod '$methodName' args: $args");
+    debug(">>> noSuchMethod '$methodName' args: $args");
     var port = window.lookupPort(_portName);
     assert(port != null);
     return send(port, methodName, args);
   }
 }
 
+debug(message) {
+  if (window.localStorage['debug_dart'] == 'true') print(message);
+}
 
 class CalcServer {
   RPC _rpc;
   
   generatePi(Map func_handle) {
-    print("generate_pi called with $func_handle");
-    _rpc.invokeRpcCallback(func_handle, [4]);
-    _rpc.invokeRpcCallback(func_handle, [2]);
+    debug("generate_pi called with $func_handle");
+    func_handle.invoke([4]);
+    func_handle.invoke([2]);
     return null;
   }
   
@@ -214,13 +262,13 @@ class CalcServer {
 
 testClient() {
   void handlePiDigit(digit) {
-    print("getting pi digit: $digit");
+    debug("getting pi digit: $digit");
   }
   
   var jscalc= new RPC.Client("js-calculator");
   var sum = jscalc.add(10, 4);
   Expect.equals(14, sum);
-  print("js-calculator result: $sum");
+  debug("js-calculator result: $sum");
   jscalc.generate_pi(handlePiDigit);
   try {
     var trash = jscalc.foo(100);
