@@ -1,4 +1,4 @@
-
+#library("rpc");
 #import("dart:json");
 #import("dart:isolate");
 #import("dart:html");
@@ -59,7 +59,7 @@ class RPC {
     var port = window.lookupPort(portName);
     assert(port != null);
     var res = port.callSync({"method":"__index__", "args":[]});
-    print(res);
+    debug(res);
   }
 
   String makeHomeId() => (Math.random() * 1000000).toInt().toString();
@@ -84,8 +84,13 @@ class RPC {
         newList[i] = serialize(obj[i]);
       }
       return newList;
+    } else if (obj is Map) {
+      var newMap = new Map();
+      obj.forEach((k, v) {
+          newMap[serialize(k)] = serialize(v);
+      });
+      return newMap;
     } else {
-      // TODO: probably need to serialize maps. 
       return obj;
     }
   }
@@ -123,20 +128,20 @@ class RPC {
   }
 
   receiveCallback(String msg) {
-    print("receiveCallback: $msg");
+    debug("receiveCallback: $msg");
     String methodName = msg["method"];
     assert(methodName != null);
     List serializedArgs = msg["args"];
     assert(serializedArgs != null);
     List args = deserialize(serializedArgs);
-    //print("receiveCallback: deserialized args: $args");
+    //debug("receiveCallback: deserialized args: $args");
     assert(args != null);
     if (methodName == "__index__") {
       return {"value": _methods.getKeys()};
     } else if (methodName == "__release__") {
       var id = args[0];
       var obj = _handles.getObject(id);
-      //print("request to release handle '$id' ($obj)");
+      //debug("request to release handle '$id' ($obj)");
       assert(id is String);
       assert(obj != null);
       _handles.releaseObject(id);
@@ -147,7 +152,7 @@ class RPC {
       assert(args.length == 2);
       m = args[0];     // First argument to rpc call is closure.
       args = args[1];  // Arguments to closure.
-      //print("request to call $m");
+      //debug("request to call $m");
     } else {
       m = _methods[methodName];
       if (m == null) {
@@ -165,16 +170,16 @@ class RPC {
   }
   
   send(SendPortSync port, String methodName, List args) {
-    print("args before serialize: $args");
+    debug("args before serialize: $args");
     var serializedArgs = serialize(args);
     var msg = {"method": methodName, "args": serializedArgs };
-    print("sending: $msg");
+    debug("sending: $msg");
     var res = port.callSync(msg);
-    print("received: $res");
+    debug("received: $res");
     if (res.containsKey("value")) {
       return deserialize(res["value"]);
     } else if (res["exception"] != null) {
-      print("received exception: ${res["exception"]}");
+      debug("received exception: ${res["exception"]}");
       throw res["exception"];
     } else {
       throw "Illegal rpc response format.";
@@ -182,13 +187,16 @@ class RPC {
   }
   
   noSuchMethod(String methodName, List args) {
-    print(">>> noSuchMethod '$methodName' args: $args");
+    debug(">>> noSuchMethod '$methodName' args: $args");
     var port = window.lookupPort(_portName);
     assert(port != null);
     return send(port, methodName, args);
   }
 }
 
+debug(message) {
+  if (window.localStorage['debug_dart'] == 'true') print(message);
+}
 
 class CalcServer {
   RPC _rpc;
