@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>PanoramioDemo</title>
+    <link rel="stylesheet" href="PanoramioDemo.css">
+    <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?libraries=geometry,panoramio&sensor=true"></script>
+    <script src="http://dart.googlecode.com/svn/branches/bleeding_edge/dart/client/dart.js"></script>
+    <script type="text/javascript" src="https://dart-js-interop.google.com.codespot.com/git/rpc/serialize.js"></script>
+    <script type="text/javascript" src="https://dart-js-interop.google.com.codespot.com/git/rpc/async.js"></script> 
+    <script type="text/javascript" src="https://dart-js-interop.google.com.codespot.com/git/rpc/rpc.js"></script>
+    <script type="text/javascript" src="panoramio_service.js"></script>
+    <script type="text/javascript" src="maps_client.js"></script>
+  </head>
+  <body>
+    <div>
+      <div id="location-search" style="float:left">
+        Location: 
+        <input id="location" value="New York">
+      </div>
+      <div id="filter" style="float:left">
+        Filter: 
+        <input id="tag">
+      </div>
+      <div id="filter2" >
+        User id:
+        <input id="userId" value="240383">
+      </div>
+    </div>
+    
+    <div id="content" style="position: absolute; top: 50px; bottom:0px; background-color: rgb(229, 227, 223); overflow: visible; left:  0;right: 0;">
+    </div>
+    
+    <script type="application/dart" src="PanoramioDemo.dart"></script>
+  </body>
+</html>
+
