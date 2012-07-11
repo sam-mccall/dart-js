@@ -29,25 +29,21 @@ class ProxyJs {
     initialize(prototypeName);
     if (prototypeName != null) {
       injectSource("""
-      alert('wat');
-      var ${prototypeName}_new = function(args) {
+      ${prototypeName}_new = function(args) {
         return new ${prototypeName}(args);
       }
-      alert('hi');
       var port = new ReceivePortSync();
       port.receive(function foo(listArgs) {
-        alert('blah');
         var handle = _scope.get(listArgs['callingObject']);
         // this was the same
         var handlesList = listArgs['handles'];
-        for (int i = 0; i < handlesList.length; i++) {
+        for (var i = 0; i < handlesList.length; i++) {
           argsListIndex = handlesList[i];
           listArgs['args'][argsListIndex] = _scope.get(listArgs['args'][argsListIndex]);
         }
         var result = ${prototypeName}_new(listArgs['args']);
         return {'_id': _scope.allocate(result), 'result': result};
       });
-      alert('registering ${prototypeName}_new');
       window.registerPort(${prototypeName}_new, port.toSendPort());
       """);
       var args_result = findHandles(args);

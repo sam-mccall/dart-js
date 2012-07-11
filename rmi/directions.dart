@@ -38,7 +38,7 @@ main() {
   };
   var element = document.query('#map_canvas');
   var map = new GMap(element, myOptions);
-        
+
   directionsDisplay = new DirectionsRenderer();
   directionsDisplay.setMap(map); // TODO: get handle corresponding to map here.
   directionsDisplay.setPanel(document.querySelector('#directions_panel'));
@@ -66,7 +66,7 @@ function test(data) {
   if (data == 'sent')
     return 'received';
 }
-alert('wabble');
+
 function Scope() {
   this.handles = {};
   this.id = 0;
@@ -87,9 +87,9 @@ for (var i=0; i < methods.length; i++) {
   port.receive(function foo(listArgs) {
       var handle = _scope.get(listArgs['callingObject']);
       var handlesList = listArgs['handles'];
-      for (int i = 0; i < handlesList.length; i++) {
+      for (var i = 0; i < handlesList.length; i++) {
         argsListIndex = handlesList[i];
-        listArgs['args'][argsListIndex] = _scope.get(listArgs['args'][argsListIndex].id)
+        listArgs['args'][argsListIndex] = _scope.get(listArgs['args'][argsListIndex]);
       }
       var the_method = handle[method];
       var result = the_method.apply(handle, listArgs['args']);// _scope.get(listArgs['callingObject']).method(listArgs['args']);//TODO call on a particular object? full name? also test whether there's an object calling it or if it's just a static function
