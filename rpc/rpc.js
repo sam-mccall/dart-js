@@ -105,13 +105,20 @@ rpc = (function() {
     this.handles = new Handles();
     var endpoint = this;
     this.receive.receive(function(data) {
+      debug(endpoint, "received", data);
+      var ret;
       try {
         var args = endpoint.deserializer.apply(data.args);
+        debug(endpoint, "invoking", data.method, args);
         var result = invokeHandler(endpoint, data.method, args);
-        return {value: endpoint.serializer.apply(result)};
+        debug(endpoint, data.method, "returned", result);
+        ret = {value: endpoint.serializer.apply(result)};
       } catch (e) {
-        return {exception: e.toString()};
+        debug(endpoint, data.method, "threw", e);
+        ret = {exception: e.toString()};
       }
+      debug(endpoint, "returning", ret);
+      return ret;
     });
     function serializeHandle(handle) {
       return ({
@@ -243,6 +250,11 @@ rpc = (function() {
 
   function generateId() {
     return Math.floor(Math.random() * 1000000000).toString();
+  }
+
+  function debug() {
+    var args = Array.prototype.slice.call(arguments);
+    if (window.localStorage['debug']) console.log.apply(console, args);
   }
 
   return {
