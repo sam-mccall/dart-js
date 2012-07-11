@@ -46,6 +46,8 @@ class RemoteObject {
     var port = json["port"];
     if (handleType == 'function') {
       return new RemoteFunction(json["id"], json["home"], port, rpc);
+    } else if (handleType == null) {
+      return new RemoteObject(null, json["id"], json["home"], port, rpc);
     } else {
       throw "unsupported remote object type '$handleType'";
     }
