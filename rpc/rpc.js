@@ -31,13 +31,13 @@ rpc = (function() {
     invoke(this.endpoint, this.port, '__release__', [this.id]);
   };
 
-  function FunctionHandle(home, id, endpoint, port) {
+  function RemoteFunction(home, id, endpoint, port) {
     Handle.call(this, home, id, endpoint, port);
     this.invoke = this.invoke.bind(this);
   }
-  FunctionHandle.prototype = Object.create(Handle.prototype);
-  FunctionHandle.prototype.handleType = "function";
-  FunctionHandle.prototype.invoke = function() {
+  RemoteFunction.prototype = Object.create(Handle.prototype);
+  RemoteFunction.prototype.handleType = "function";
+  RemoteFunction.prototype.invoke = function() {
     return invoke(this.endpoint, this.port, '__call__', [this, Array.prototype.slice.call(arguments)]);
   };
 
@@ -161,14 +161,14 @@ rpc = (function() {
   function getHandleTypeByName(name) {
     return (name == 'stream') ? RemoteStream
         : (name == 'future') ? RemoteFuture
-        : (name == 'function') ? FunctionHandle
+        : (name == 'function') ? RemoteFunction
         : Handle;
   }
 
   function getHandleType(obj) {
     return (obj instanceof async.Stream) ? RemoteStream
         : (obj instanceof async.Future) ? RemoteFuture
-        : (obj instanceof Function) ? FunctionHandle
+        : (obj instanceof Function) ? RemoteFunction
         : Handle;
   }
 
@@ -262,6 +262,6 @@ rpc = (function() {
     Service: Service,
     Client: Client,
     Handle: Handle,
-    FunctionHandle: FunctionHandle,
+    RemoteFunction: RemoteFunction,
   };
 })();
