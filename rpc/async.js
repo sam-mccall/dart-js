@@ -9,6 +9,7 @@ async = (function() {
 
   function Completer(future) {
     this.future = (future == null) ? new Future() : future;
+    this.complete = this.complete.bind(this); // Make it passable as a closure
   }
 
   Completer.prototype.complete = function(result, err) {
@@ -36,6 +37,8 @@ async = (function() {
 
   function StreamSource(stream) {
     this.stream = (stream == null) ? new Stream() : stream;
+    this.emit = this.emit.bind(this);
+    this.close = this.close.bind(this);
   }
 
   StreamSource.prototype.emit = function(item) {
