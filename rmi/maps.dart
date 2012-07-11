@@ -21,16 +21,12 @@ class GMap extends ProxyJs {
   List<MVCArray> get controls() => new MVCMapControlArrayList(this);
 }
 
-class LatLng {
-  final num _lat;
-  final num _lng;
-  LatLng(this._lat, this._lng);
+class LatLng extends ProxyJs {
+  LatLng(lat, lng) : super('google.maps.LatLng', [lat, lng]);
 }
 
-class LatLngBounds {
-  final LatLng _sw;
-  final LatLng _ne;
-  LatLngBounds(this._sw, this._ne);
+class LatLngBounds extends ProxyJs {
+  LatLngBounds(sw, ne) : super('google.maps.LatLngBounds', [sw, ne]);
 }
 
 class MapTypeId {
