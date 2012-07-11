@@ -10,7 +10,6 @@ class PanoramioDemo {
   
   void updateLocation(String locationQuery) {
     panoramio.findLocation(locationQuery, (results, status) {
-      print("callback invoked!");
       if (status == "OK") {
         print(status);
         print("results $results");
