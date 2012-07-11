@@ -20,11 +20,12 @@ rpc = (function() {
     delete this.handles[key];
   }
 
-  function Handle(home, id, endpoint, port) {
+  function Handle(home, id, endpoint, port, type) {
     this.home = home; // TODO(sammccall): just use port for this, once they can be compared
     this.id = id;
     this.endpoint = endpoint;
     this.port = port;
+    this.handleType = type;
   }
   Handle.prototype.handleType = null;
   Handle.prototype.release = function() {
@@ -32,26 +33,20 @@ rpc = (function() {
   };
 
   function RemoteFunction(home, id, endpoint, port) {
-    Handle.call(this, home, id, endpoint, port);
+    this.handle = new Handle(home, id, endpoint, port, 'function');
     this.invoke = this.invoke.bind(this);
   }
-  RemoteFunction.prototype = Object.create(Handle.prototype);
-  RemoteFunction.prototype.handleType = "function";
   RemoteFunction.prototype.invoke = function() {
-    return invoke(this.endpoint, this.port, '__call__', [this, Array.prototype.slice.call(arguments)]);
+    return invoke(this.handle.endpoint, this.handle.port, '__call__', [this, Array.prototype.slice.call(arguments)]);
   };
+  RemoteFunction.prototype.release = function() { this.handle.release(); }
 
   function RemoteStream(home, id, endpoint, port) {
     async.Stream.call(this);
-    this.handle = new Handle(home, id, endpoint, port);
-    this.home = home;
-    this.id = id;
-    this.endpoint = endpoint;
-    this.port = port;
+    this.handle = new Handle(home, id, endpoint, port, 'stream');
     this.registered = false;
   }
   RemoteStream.prototype = Object.create(async.Stream.prototype);
-  RemoteStream.prototype.handleType = "stream";
   RemoteStream.prototype.onItem = function(callback) {
     registerRemoteStream(this);
     async.Stream.prototype.onItem.call(this, callback);
@@ -63,7 +58,7 @@ rpc = (function() {
   function registerRemoteStream(stream) {
     if (stream.registered) return;
     var completer = new async.StreamSource(stream);
-    invoke(stream.endpoint, stream.port, '__subscribe__', [stream.handle, function(result) {
+    invoke(stream.handle.endpoint, stream.handle.port, '__subscribe__', [stream.handle, function(result) {
       (result.closed) ? completer.close() : completer.emit(result.value);
     }]);
     stream.registered = true;
@@ -71,15 +66,10 @@ rpc = (function() {
 
   function RemoteFuture(home, id, endpoint, port) {
     async.Future.call(this);
-    this.handle = new Handle(home, id, endpoint, port);
-    this.home = home;
-    this.id = id;
-    this.endpoint = endpoint;
-    this.port = port;
+    this.handle = new Handle(home, id, endpoint, port, 'future');
     this.registered = false;
   }
   RemoteFuture.prototype = Object.create(async.Future.prototype);
-  RemoteFuture.prototype.handleType = "future";
   RemoteFuture.prototype.onComplete = function(callback) {
     registerRemoteFuture(this);
     async.Future.prototype.onComplete.call(this, callback);
@@ -87,7 +77,7 @@ rpc = (function() {
   function registerRemoteFuture(future) {
     if (future.registered) return;
     var completer = new async.Completer(future);
-    invoke(future.endpoint, future.port, '__subscribe__', [future.handle, function(result) {
+    invoke(future.handle.endpoint, future.handle.port, '__subscribe__', [future.handle, function(result) {
       var err = result.hasOwnProperty('exception');
       completer.complete(
           err ? undefined : result.value,
@@ -115,13 +105,14 @@ rpc = (function() {
         debug(endpoint, data.method, "returned", result);
         ret = {value: endpoint.serializer.apply(result)};
       } catch (e) {
-        debug(endpoint, data.method, "threw", e);
+        debug(endpoint, data.method, "threw", e, e.stack);
         ret = {exception: e.toString()};
       }
       debug(endpoint, "returning", ret);
       return ret;
     });
     function serializeHandle(handle) {
+      if (!(handle instanceof Handle)) throw new Error("Not a handle");
       return ({
         $type: 'handle',
         id: handle.id,
@@ -133,8 +124,12 @@ rpc = (function() {
     this.serializer.register(function(x) { return x instanceof Function; }, function(func) {
       return serializeHandle(endpoint.handle(func));
     });
+    this.serializer.register(function(x) { return x instanceof RemoteFunction; }, function(func) {
+      return serializeHandle(func.handle);
+    })
     this.serializer.register(function(x) { return x instanceof Handle; }, serializeHandle);
     this.serializer.register(function(x) { return x instanceof async.Stream; }, function(stream) {
+      if (stream instanceof RemoteStream) return serializeHandle(stream.handle);
       var handle = endpoint.handle(stream);
       stream.onClose(function() {
         endpoint.handles.release(handle.id);
@@ -142,6 +137,7 @@ rpc = (function() {
       return serializeHandle(handle);
     });
     this.serializer.register(function(x) { return x instanceof async.Future; }, function(future) {
+      if (future instanceof RemoteFuture) return serializeHandle(future.handle);
       var handle = endpoint.handle(future);
       future.onComplete(function() {
         endpoint.handles.release(handle.id);
@@ -166,16 +162,16 @@ rpc = (function() {
   }
 
   function getHandleType(obj) {
-    return (obj instanceof async.Stream) ? RemoteStream
-        : (obj instanceof async.Future) ? RemoteFuture
-        : (obj instanceof Function) ? RemoteFunction
-        : Handle;
+    return (obj instanceof async.Stream) ? 'stream'
+        : (obj instanceof async.Future) ? 'future'
+        : (obj instanceof Function) ? 'function'
+        : null;
   }
 
   Endpoint.prototype.handle = function(object) {
     var id = this.handles.allocate(object);
     var type = getHandleType(object);
-    return new type(this.id, id, this, this.receive.toSendPort());
+    return new Handle(this.id, id, this, this.receive.toSendPort(), type);
   }
 
   function Service(name, methodTable) {
