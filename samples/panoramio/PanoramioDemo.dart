@@ -27,7 +27,7 @@ class PanoramioDemo {
       "zoom": 15,
       "mapTypeId": "roadmap"
      };
-    mapHandle = panoramio.createMap('content', mapOptions, lat, lng);//40.693134, -74.031028);
+    mapHandle = panoramio.createMap('content', mapOptions, lat, lng);
     panoramioHandle = panoramio.createPanoramio(mapHandle);
   }
   
@@ -46,9 +46,6 @@ class PanoramioDemo {
 void main() {
   print("started in dart");
   PanoramioDemo demo = new PanoramioDemo();
-  print("b4");
   demo.load();  
-  print("finished in dart");
-  //print("js-calculator result: $sum");
   //service.__release__(handle);
 }
