@@ -1,4 +1,4 @@
-
+#library("rpc");
 #import("dart:json");
 #import("dart:isolate");
 #import("dart:html");

@@ -1,5 +1,5 @@
 #import('dart:html');
-#import('rpc.dart', prefix: 'rpc');
+#import('../../rpc/rpc.dart', prefix: 'rpc');
 
 class PanoramioDemo {
   final rpc.RPC panoramio;
