@@ -9,7 +9,7 @@
 #library('maps');
 #import('dart:html');
 #import('dart:isolate');
-#import('../../../lib/html/proxy_js.dart');
+#import('proxy_js.dart');
 
 class GMap extends ProxyJs {
 
