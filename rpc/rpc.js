@@ -28,7 +28,7 @@ rpc = (function() {
   }
   Handle.prototype.handleType = null;
   Handle.prototype.release = function() {
-    invoke(this.endpoint, this.port, '__release__', this.id);
+    invoke(this.endpoint, this.port, '__release__', [this.id]);
   };
 
   function FunctionHandle(home, id, endpoint, port) {
