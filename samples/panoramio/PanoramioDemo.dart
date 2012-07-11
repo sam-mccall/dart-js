@@ -1,5 +1,5 @@
 #import('dart:html');
-#import('rpc.dart', prefix: 'rpc');
+#import('../../rpc/rpc.dart', prefix: 'rpc');
 
 class PanoramioDemo {
   final rpc.RPC panoramio;
@@ -10,7 +10,6 @@ class PanoramioDemo {
   
   void updateLocation(String locationQuery) {
     panoramio.findLocation(locationQuery, (results, status) {
-      print("callback invoked!");
       if (status == "OK") {
         print(status);
         print("results $results");
@@ -27,7 +26,7 @@ class PanoramioDemo {
       "zoom": 15,
       "mapTypeId": "roadmap"
      };
-    mapHandle = panoramio.createMap('content', mapOptions, lat, lng);//40.693134, -74.031028);
+    mapHandle = panoramio.createMap('content', mapOptions, lat, lng);
     panoramioHandle = panoramio.createPanoramio(mapHandle);
   }
   
@@ -46,9 +45,6 @@ class PanoramioDemo {
 void main() {
   print("started in dart");
   PanoramioDemo demo = new PanoramioDemo();
-  print("b4");
   demo.load();  
-  print("finished in dart");
-  //print("js-calculator result: $sum");
   //service.__release__(handle);
 }

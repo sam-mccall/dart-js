@@ -20,9 +20,8 @@ class ProxyJs {
       injectSource("""
         var port = new ReceivePortSync();
         port.receive(function foo(listArgs) {
-          alert(listArgs['args']);
           var result = (1,eval)(listArgs['args'].toString()); // ewwwww. Let's find a better solution than this.
-          return {'_id': _scope.allocate(result), 'result': result};
+          return {'_id': _scope.allocate(result)};
         });
         window.registerPort('get_the_awesome_global', port.toSendPort());
         //TODO: the stuff up above my no longer be needed...
@@ -30,14 +29,13 @@ class ProxyJs {
         port = new ReceivePortSync();
         port.receive(function foo(listArgs) {
           var result = document.querySelector(listArgs['args']);
-          return {'_id': _scope.allocate(result), 'result': result};
+          return {'_id': _scope.allocate(result)};
         });
         window.registerPort('querySelector', port.toSendPort());
         """);
       var doc_result = invoke({'receiver': id, 'method': 'get_the_awesome_global', 'args':
           ['document'], 'handles': []});
       docHandle = doc_result['id'];
-      print("doc handle $docHandle");
     }
   }
 
@@ -84,7 +82,7 @@ class ProxyJs {
           listArgs['args'][argsListIndex] = _scope.get(listArgs['args'][argsListIndex]);
         }
         var result = ${prototypeName}_new(listArgs['args']);
-        return {'_id': _scope.allocate(result), 'result': result};
+        return {'_id': _scope.allocate(result)};
       });
       window.registerPort('${prototypeName}_new', port.toSendPort());
       """);
@@ -109,7 +107,6 @@ class ProxyJs {
 
   Map<String, Object> invoke(Map argsList) {
     print(argsList['method']);
-    print(argsList['args']);
     SendPortSync port = window.lookupPort(argsList['method']);
     return port.callSync({'callingObject': id, 'args': argsList['args'],
         'handles': argsList['handles']});

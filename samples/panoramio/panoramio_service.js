@@ -42,7 +42,6 @@ var PanoramioService = new function() {
              callback.invoke();
              callback.release();
           });
-       // return completer.future;
       },
       routeWithId: function(origin, destination, travelMode, mapContainerId) {
         console.log("routeWithId");

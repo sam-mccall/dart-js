@@ -80,7 +80,7 @@ Scope.prototype.get = function(handle) {
   return this.handles[handle];
 }
 _scope = new Scope();
-//for (method in all_methods) { // TODO (this should be done programmatically...)
+//for (method in all_methods) { // TODO (this should be done programmatically...) (register not by method name, and switch on method name)!!!!
 var methods = ['setMap', 'setPanel', 'push'];
 for (var i=0; i < methods.length; i++) {
   var method = methods[i];
