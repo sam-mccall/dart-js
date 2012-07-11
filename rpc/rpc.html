@@ -2,15 +2,14 @@
 <html>
   <body>
     <script type="application/dart" src="rpc.dart"></script>
+    <!-- bootstraps the Dart VM and handles non-Dart browsers -->
     <script type="text/javascript"
       src="http://dart.googlecode.com/svn/branches/bleeding_edge/dart/client/dart.js"></script>
-    <script type="application/javascript"
-      src="https://dart-js-interop.google.com.codespot.com/git/rpc/rpc.js"></script>
-    <script type="application/javascript" 
-      src="https://dart-js-interop.google.com.codespot.com/git/rpc/sample_rpc_service.js"></script>
-    <script type="application/javascript"
-      src="https://dart-js-interop.google.com.codespot.com/git/rpc/sample_rpc_client.js"></script>
-    <!-- bootstraps the Dart VM and handles non-Dart browsers -->
+    <script type="application/javascript" src="async.js"></script>
+    <script type="application/javascript" src="serialize.js"></script>
+    <script type="application/javascript" src="rpc.js"></script>
+    <script type="application/javascript" src="sample_rpc_service.js"></script>
+    <script type="application/javascript" src="sample_rpc_client.js"></script>
     
   </body>
 </html>
