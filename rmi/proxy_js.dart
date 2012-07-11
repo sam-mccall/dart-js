@@ -34,7 +34,6 @@ class ProxyJs {
       }
       var port = new ReceivePortSync();
       port.receive(function foo(listArgs) {
-        var handle = _scope.get(listArgs['callingObject']);
         // this was the same
         var handlesList = listArgs['handles'];
         for (var i = 0; i < handlesList.length; i++) {
@@ -44,7 +43,7 @@ class ProxyJs {
         var result = ${prototypeName}_new(listArgs['args']);
         return {'_id': _scope.allocate(result), 'result': result};
       });
-      window.registerPort(${prototypeName}_new, port.toSendPort());
+      window.registerPort('${prototypeName}_new', port.toSendPort());
       """);
       var args_result = findHandles(args);
       var result = this.invoke(
