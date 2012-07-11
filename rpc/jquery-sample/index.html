@@ -18,7 +18,7 @@
       main() {
         final autocomplete = new rpc.RPC.Client('jquery-widget/autocomplete');
         handler(term, callback) {
-          autocomplete.invokeRpcCallback(callback, [['a', 'aa', 'aaa']]);
+          callback.invoke([['a', 'aa', 'aaa']]);
         }
         autocomplete.autocomplete('#autocomplete', {'source': handler});
       }
