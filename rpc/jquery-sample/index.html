@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+		<title>Sample of Dart-JS interop wth RPC</title>
+		<link type="text/css" href="../../third_party/jquery-ui-1.8.21.custom/css/ui-lightness/jquery-ui-1.8.21.custom.css" rel="stylesheet" />
+		<script type="text/javascript" src="../../third_party/jquery-ui-1.8.21.custom/js/jquery-1.7.2.min.js"></script>
+		<script type="text/javascript" src="../../third_party/jquery-ui-1.8.21.custom/js/jquery-ui-1.8.21.custom.min.js"></script>
+    <script type="text/javascript"
+      src="http://dart.googlecode.com/svn/branches/bleeding_edge/dart/client/dart.js"></script>
+    <script type="text/javascript" src="../async.js"></script>
+    <script type="text/javascript" src="../serialize.js"></script>
+    <script type="text/javascript" src="../rpc.js"></script>
+    <script type="text/javascript" src="jquery_service.js"></script>
+    <script type="application/dart">
+      #import('../rpc.dart', prefix: 'rpc');
+
+      main() {
+        final autocomplete = new rpc.RPC.Client('jquery-widget/autocomplete');
+        handler(term, callback) {
+          autocomplete.invokeRpcCallback(callback, [['a', 'aa', 'aaa']]);
+        }
+        autocomplete.autocomplete('#autocomplete', {'source': handler});
+      }
+    </script>
+	</head>
+	<body>
+	<h1>Welcome to sample of jQuery UI-Dart interop!</h1>
+		<h2>Autocomplete</h2>
+		<div>
+			<input id="autocomplete"/>
+		</div>
+	</body>
+</html>
+
