@@ -18,12 +18,10 @@ class ProxyJs {
   setUpDocHandle() {
     if (docHandle == null) {
       injectSource("""
-        get_the_awesome_global = function(global_name) {
-          return (1, eval)(global_name); // ewwwww. Let's find a better solution than this.
-        }
         var port = new ReceivePortSync();
         port.receive(function foo(listArgs) {
-          var result = get_the_awesome_global(listArgs['args']);
+          alert(listArgs['args']);
+          var result = (1,eval)(listArgs['args'].toString()); // ewwwww. Let's find a better solution than this.
           return {'_id': _scope.allocate(result), 'result': result};
         });
         window.registerPort('get_the_awesome_global', port.toSendPort());
@@ -36,10 +34,10 @@ class ProxyJs {
         });
         window.registerPort('querySelector', port.toSendPort());
         """);
-      docHandle = new ProxyJs._update(_nextIdNum++, this.prototypeName);
       var doc_result = invoke({'receiver': id, 'method': 'get_the_awesome_global', 'args':
           ['document'], 'handles': []});
       docHandle = doc_result['id'];
+      print("doc handle $docHandle");
     }
   }
 
@@ -58,10 +56,7 @@ class ProxyJs {
     setUpDocHandle();
     List elements = [];
     for (int i = 0; i < arguments.length; i++) {
-      print('HI THERE');
-      print(arguments[i]);
       if (arguments[i] is Element) {
-        print('queryselector ${arguments[i].id}');
         var result = invoke(
             {'receiver': docHandle, 'method': 'querySelector',
              'args': '#${arguments[i].id}', 'handles': []});
@@ -114,6 +109,7 @@ class ProxyJs {
 
   Map<String, Object> invoke(Map argsList) {
     print(argsList['method']);
+    print(argsList['args']);
     SendPortSync port = window.lookupPort(argsList['method']);
     return port.callSync({'callingObject': id, 'args': argsList['args'],
         'handles': argsList['handles']});
