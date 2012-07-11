@@ -33,6 +33,7 @@ rpc = (function() {
 
   function FunctionHandle(home, id, endpoint, port) {
     Handle.call(this, home, id, endpoint, port);
+    this.invoke = this.invoke.bind(this);
   }
   FunctionHandle.prototype = Object.create(Handle.prototype);
   FunctionHandle.prototype.handleType = "function";
