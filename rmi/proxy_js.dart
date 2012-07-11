@@ -24,7 +24,6 @@ class ProxyJs {
           return {'_id': _scope.allocate(result)};
         });
         window.registerPort('get_the_awesome_global', port.toSendPort());
-        //TODO: the stuff up above my no longer be needed...
 
         port = new ReceivePortSync();
         port.receive(function foo(listArgs) {
@@ -35,7 +34,7 @@ class ProxyJs {
         """);
       var doc_result = invoke({'receiver': id, 'method': 'get_the_awesome_global', 'args':
           ['document'], 'handles': []});
-      docHandle = doc_result['id'];
+      docHandle = doc_result['_id'];
     }
   }
 
@@ -58,7 +57,7 @@ class ProxyJs {
         var result = invoke(
             {'receiver': docHandle, 'method': 'querySelector',
              'args': '#${arguments[i].id}', 'handles': []});
-        arguments[i] = new ProxyJs._update(result['id'], prototypeName);//TODO prototype name?
+        arguments[i] = new ProxyJs._update(result['_id'], prototypeName);//TODO prototype name?
       }
     }
     return arguments;
@@ -118,8 +117,8 @@ class ProxyJs {
     var result = this.invoke(
         {'receiver': id, 'method': method_name, 'args': args_result[0], 'handles':
           args_result[1]});
-    if (result is Map && result.containsKey('id')) {
-      return new ProxyJs._update(result['id'], prototypeName);
+    if (result is Map && result.containsKey('_id')) {
+      return new ProxyJs._update(result['_id'], prototypeName);
     } else {
       throw new NoSuchMethodException(this, method_name, args);
     }
