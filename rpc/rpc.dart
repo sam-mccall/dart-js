@@ -84,8 +84,13 @@ class RPC {
         newList[i] = serialize(obj[i]);
       }
       return newList;
+    } else if (obj is Map) {
+      var newMap = new Map();
+      obj.forEach((k, v) {
+          newMap[serialize(k)] = serialize(v);
+      });
+      return newMap;
     } else {
-      // TODO: probably need to serialize maps. 
       return obj;
     }
   }
