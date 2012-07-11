@@ -33,13 +33,14 @@ rpc = (function() {
   };
 
   function RemoteFunction(home, id, endpoint, port) {
-    this.handle = new Handle(home, id, endpoint, port, 'function');
-    this.invoke = this.invoke.bind(this);
+    function result() {
+      return invoke(result.handle.endpoint, result.handle.port,
+          '__call__', [result, Array.prototype.slice.call(arguments)]);
+    }
+    result.handle = new Handle(home, id, endpoint, port, 'function');
+    result.release = function() { result.handle.release(); };
+    return result;
   }
-  RemoteFunction.prototype.invoke = function() {
-    return invoke(this.handle.endpoint, this.handle.port, '__call__', [this, Array.prototype.slice.call(arguments)]);
-  };
-  RemoteFunction.prototype.release = function() { this.handle.release(); }
 
   function RemoteStream(home, id, endpoint, port) {
     async.Stream.call(this);
@@ -122,11 +123,8 @@ rpc = (function() {
       })
     }
     this.serializer.register(function(x) { return x instanceof Function; }, function(func) {
-      return serializeHandle(endpoint.handle(func));
+      return serializeHandle(func.hasOwnProperty('handle') ? func.handle : endpoint.handle(func));
     });
-    this.serializer.register(function(x) { return x instanceof RemoteFunction; }, function(func) {
-      return serializeHandle(func.handle);
-    })
     this.serializer.register(function(x) { return x instanceof Handle; }, serializeHandle);
     this.serializer.register(function(x) { return x instanceof async.Stream; }, function(stream) {
       if (stream instanceof RemoteStream) return serializeHandle(stream.handle);
@@ -187,11 +185,11 @@ rpc = (function() {
       var target = args[0];
       var callback = args[1];
       if (target instanceof async.Stream) {
-        target.onItem(function(x) { callback.invoke({value:x}); });
-        target.onClose(function() { callback.invoke({closed:true}); callback.release(); });
+        target.onItem(function(x) { callback({value:x}); });
+        target.onClose(function() { callback({closed:true}); callback.release(); });
       } else if (target instanceof async.Future) {
         target.onComplete(function(x, err) { 
-          callback.invoke((err == null) ? {value:x} : {exception:err.toString()});
+          callback((err == null) ? {value:x} : {exception:err.toString()});
           callback.release();
         });
       } else {
