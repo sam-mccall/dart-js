@@ -14,14 +14,3 @@ p {
 form {
   margin: 1em;
 }
-
-#button {
-  width: 6em;
-  margin-bottom: 1em;
-}
-
-#filter {
-  padding: 5px 10px;
-  background: #fff;
-  border-top: 0;
-}

@@ -13,7 +13,7 @@ var PanoramioService = new function() {
     var geocoder = new google.maps.Geocoder();
     geocoder.geocode({'address': query}, function(results, status) {
       if (status == google.maps.GeocoderStatus.OK) {
-        callback.invoke(results, status);
+        callback(results, status);
         callback.release();
       }
     });
@@ -39,7 +39,7 @@ var PanoramioService = new function() {
             'destination': destination,
             'travelMode': travelMode
           }, function() {
-             callback.invoke();
+             callback();
              callback.release();
           });
       },

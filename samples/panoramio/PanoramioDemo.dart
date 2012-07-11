@@ -31,12 +31,12 @@ class PanoramioDemo {
   }
   
   void load() {
-    document.query("#location-button").on.click.add((event) => updateLocation(document.query("#location").value)); 
-    document.query("#filter-button").on.click.add((event) {
+    document.query("#location").on.change.add((event) => updateLocation(document.query("#location").value));
+    document.query("#tag").on.change.add((event) {
       InputElement input = document.query("#tag");
       panoramio.setTag(input.value, panoramioHandle);
     });
-    document.query("#user-id-button").on.click.add(
+    document.query("#userId").on.change.add(
       (event) => panoramio.setUserId(document.query("#userId").value, panoramioHandle));
     updateLocation("New York");
   }
