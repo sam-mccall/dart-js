@@ -15,7 +15,7 @@ function loadPanoramioView() {
   panoramioService = new rpc.Client('panoramio').connect();
   var mapOptions = {
     zoom: 15,
-    mapTypeId: google.maps.MapTypeId.ROADMAP
+    mapTypeId: google.maps.MapTypeId.ROADMAP,
   };
   panoramioService.createMap('content', mapOptions, 40.693134, -74.031028);
   document.getElementById("filter-button").onclick = function() {

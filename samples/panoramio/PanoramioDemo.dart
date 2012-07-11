@@ -22,11 +22,11 @@ class PanoramioDemo {
   }
   
   void loadMap(lat, lng) {
-    var mapOptions = {
+    mapHandle = panoramio.createMap('content', {
       "zoom": 15,
-      "mapTypeId": "roadmap"
-     };
-    mapHandle = panoramio.createMap('content', mapOptions, lat, lng);
+      "mapTypeId": "roadmap",
+      "center": {"\$type": "latlng", "lat": lat, "lng": lng},
+     });
     panoramioHandle = panoramio.createPanoramio(mapHandle);
   }
   

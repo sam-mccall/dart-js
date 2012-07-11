@@ -1,17 +1,14 @@
 
 var PanoramioService = new function() {
-  var createMap = function(mapContainer, mapOptions, centerLat, centerLong) {
-    var container = document.getElementById(mapContainer);
-    mapOptions.center = new google.maps.LatLng(centerLat, centerLong);
-    var map = new google.maps.Map(container, mapOptions);
+  var createMap = function(mapContainer, mapOptions) {
+    var map = new google.maps.Map(document.getElementById(mapContainer), mapOptions);
     return service.handle(map);
   };
   var setUserId = function(userId, panoramioLayer) {
     panoramioLayer.setUserId(userId);
   };
   var findLocation = function(query, callback) {
-    var geocoder = new google.maps.Geocoder();
-    geocoder.geocode({'address': query}, function(results, status) {
+    new google.maps.Geocoder().geocode({'address': query}, function(results, status) {
       if (status == google.maps.GeocoderStatus.OK) {
         callback(results, status);
         callback.release();
@@ -62,12 +59,13 @@ var PanoramioService = new function() {
         });
       },
   });
+  
   service.serializer.register(function(x) { return x instanceof google.maps.LatLng; }, function(latlng) {
     return {$type: 'latlng', lat: latlng.lat(), lng: latlng.lng()};
   });
-  //service.serializer.register(function(x) { return x instanceof google.maps.LocationResponse; }, function(obj) {
-  //  return {$type: 'locationresponse', latlng: service.serializer.apply(obj.latlng)};
- // });
+  service.deserializer.register(function(x) { return (x != null) && (x.$type == 'latlng'); }, function(latlng) {
+    return new google.maps.LatLng(latlng.lat, latlng.lng);
+  });
   this.load = function() { service.expose(); }
 }
 
