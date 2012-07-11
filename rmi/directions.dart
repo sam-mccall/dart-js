@@ -41,7 +41,7 @@ main() {
 
   directionsDisplay = new DirectionsRenderer();
   directionsDisplay.setMap(map); // TODO: get handle corresponding to map here.
-  directionsDisplay.setPanel(document.querySelector('#directions_panel'));
+  directionsDisplay.setPanel(document.query('#directions_panel'));
   directionsService = new DirectionsService();
 
   var control = document.query('#control');
@@ -80,6 +80,7 @@ Scope.prototype.get = function(handle) {
   return this.handles[handle];
 }
 _scope = new Scope();
+//for (method in all_methods) { // TODO (this should be done programmatically...)
 var methods = ['setMap', 'setPanel', 'push'];
 for (var i=0; i < methods.length; i++) {
   var method = methods[i];
@@ -98,7 +99,6 @@ for (var i=0; i < methods.length; i++) {
   window.registerPort(method, port.toSendPort());
 }
 
-//for (method in all_methods) { // TODO (this will have to be done programmatically...?)
 
 //TODO: 'free' method to free elements in this array.
 """;

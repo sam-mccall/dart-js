@@ -6,13 +6,36 @@ class ProxyJs {
   int id;
   String prototypeName;
   static int _nextIdNum = 0;
+  static int docHandle = null;
+
 //TODO(; register latlang and stuff in ititialize method)!!
   initialize(String prototypeName) {
     this.prototypeName = prototypeName;
     id = _nextIdNum++;
+    setUpDocHandle();
   }
 
-  List<int> findHandles(List arguments) {
+  setUpDocHandle() {
+    if (docHandle == null) {
+      injectSource("""
+        /*get_the_awesome_global = function(global_name) {
+          return (1, eval)(global_name); // ewwwww. Let's find a better solution than this.
+        }
+        var port = new ReceivePortSync();
+        port.receive(function foo(listArgs) {
+          var result = get_the_awesome_global(listArgs['args']);
+          return {'_id': _scope.allocate(result), 'result': result};
+        });
+        window.registerPort('get_the_awesome_global', port.toSendPort());*/
+        """);
+      docHandle = new ProxyJs();
+      var doc_result = invoke({'receiver': id, 'method': 'get_the_awesome_global', 'args':
+          ['document'], 'handles': []});
+      docHandle = doc_result['id'];
+    }
+  }
+
+  List findHandles(List arguments) {
     List handles = [];
     for (int i = 0; i < arguments.length; i++) {
       if (arguments[i] is ProxyJs) {
@@ -21,6 +44,20 @@ class ProxyJs {
       }
     }
     return [arguments, handles];
+  }
+
+  List replaceWithElementHandles(List arguments) {
+    setUpDocHandle();
+    List elements = [];
+    for (int i = 0; i < arguments.length; i++) {
+      if (arguments[i] is Element) {
+        var result = invoke(
+            {'receiver': docHandle, 'method': 'querySelector',
+             'args': arguments, 'handles': []});
+        arguments[i] = new ProxyJs._update(result['id'], prototypeName);//TODO prototype name?
+      }
+    }
+    return arguments;
   }
 
   // no prototypeName means global function not part of any class.
@@ -71,6 +108,7 @@ class ProxyJs {
   }
 
   noSuchMethod(String method_name, List args) {
+    //var args = replaceWithElementHandles(args);
     var args_result = findHandles(args);
     var result = this.invoke(
         {'receiver': id, 'method': method_name, 'args': args_result[0], 'handles':
