@@ -27,8 +27,16 @@ class ProxyJs {
           return {'_id': _scope.allocate(result), 'result': result};
         });
         window.registerPort('get_the_awesome_global', port.toSendPort());
+        //TODO: the stuff up above my no longer be needed...
+
+        port = new ReceivePortSync();
+        port.receive(function foo(listArgs) {
+          var result = document.querySelector(listArgs['args']);
+          return {'_id': _scope.allocate(result), 'result': result};
+        });
+        window.registerPort('querySelector', port.toSendPort());
         """);
-      docHandle = ProxyJs._update(_nextIdNum++, this.prototypeName);
+      docHandle = new ProxyJs._update(_nextIdNum++, this.prototypeName);
       var doc_result = invoke({'receiver': id, 'method': 'get_the_awesome_global', 'args':
           ['document'], 'handles': []});
       docHandle = doc_result['id'];
@@ -50,10 +58,13 @@ class ProxyJs {
     setUpDocHandle();
     List elements = [];
     for (int i = 0; i < arguments.length; i++) {
+      print('HI THERE');
+      print(arguments[i]);
       if (arguments[i] is Element) {
+        print('queryselector ${arguments[i].id}');
         var result = invoke(
             {'receiver': docHandle, 'method': 'querySelector',
-             'args': arguments, 'handles': []});
+             'args': '#${arguments[i].id}', 'handles': []});
         arguments[i] = new ProxyJs._update(result['id'], prototypeName);//TODO prototype name?
       }
     }
@@ -82,6 +93,7 @@ class ProxyJs {
       });
       window.registerPort('${prototypeName}_new', port.toSendPort());
       """);
+      args = replaceWithElementHandles(args);
       var args_result = findHandles(args);
       var result = this.invoke(
           {'receiver': id, 'method': '${prototypeName}_new', 'args':
@@ -108,7 +120,7 @@ class ProxyJs {
   }
 
   noSuchMethod(String method_name, List args) {
-    var args = replaceWithElementHandles(args);
+    args = replaceWithElementHandles(args);
     var args_result = findHandles(args);
     var result = this.invoke(
         {'receiver': id, 'method': method_name, 'args': args_result[0], 'handles':

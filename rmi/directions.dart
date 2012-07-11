@@ -41,7 +41,7 @@ main() {
 
   directionsDisplay = new DirectionsRenderer();
   directionsDisplay.setMap(map); // TODO: get handle corresponding to map here.
-  directionsDisplay.setPanel(document.querySelector('#directions_panel'));
+  directionsDisplay.setPanel(document.query('#directions_panel'));
   directionsService = new DirectionsService();
 
   var control = document.query('#control');
